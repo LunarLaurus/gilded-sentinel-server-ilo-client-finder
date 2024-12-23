@@ -1,0 +1,114 @@
+name: Docker-Construct-Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  bump-version:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      java_version: ${{ steps.get_version.outputs.java_version }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Get and Bump Java Version
+        id: get_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF = $NF + 1 ; print}')
+          echo "Bumping version from $VERSION to $NEW_VERSION"
+          mvn versions:set -DnewVersion=$NEW_VERSION -DgenerateBackupPoms=false
+          echo "java_version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "java_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Updated Version
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add pom.xml
+          git commit -m "Bump version to ${{ steps.get_version.outputs.java_version }}"
+          git push origin ${{ github.ref }}
+
+  build:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: bump-version
+    outputs:
+      tag: ${{ steps.create_tag.outputs.tag }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Build with Maven
+        run: mvn clean install
+
+      - name: Create Git Tag
+        id: create_tag
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          TAG="v${{ needs.bump-version.outputs.java_version }}"
+          echo "tag=$TAG" >> $GITHUB_ENV
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Versioned Docker Image
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 \
+          --tag ${{ secrets.DOCKER_USERNAME }}/gilded-sentinel-ilo-finder:${{ needs.bump-version.outputs.java_version }} \
+          --push .
+
+      - name: Build and Push Latest Docker Image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker buildx build --platform linux/amd64,linux/arm64 \
+          --tag ${{ secrets.DOCKER_USERNAME }}/gilded-sentinel-ilo-finder:latest \
+          --push .
+
+  create-release:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.build.outputs.tag }}
+          body: |
+            ### Docker Image
+            The Docker image for this release is available at:
+            - [Docker Hub Image - ${{ needs.build.outputs.tag }}](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/gilded-sentinel-ilo-finder/tags)
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
