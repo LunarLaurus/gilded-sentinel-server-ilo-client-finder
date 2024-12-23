@@ -7,20 +7,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import lombok.Getter;
-import net.laurus.config.IpmiNetworkConfig;
-
 @SpringBootApplication(scanBasePackages = { 
 		"net.laurus.config",
 		"net.laurus.component",
-		"net.laurus.rabbit",
 		"net.laurus.service",
 		"net.laurus.controller" })
 @EnableScheduling
 @EnableAsync
 @EnableRabbit
-@Getter
-@EnableConfigurationProperties(IpmiNetworkConfig.class)
+@EnableConfigurationProperties
 public class ExecuteSpring {
 
 	public static void main(String[] args) {
