@@ -24,6 +24,8 @@ jobs:
           distribution: 'zulu'
 
       - name: Get and Bump Java Version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: get_version
         run: |
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -59,6 +61,8 @@ jobs:
           distribution: 'zulu'
 
       - name: Build with Maven
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn clean install
 
       - name: Create Git Tag
