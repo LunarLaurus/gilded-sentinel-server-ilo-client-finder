@@ -1,0 +1,8 @@
+/target
+/.settings
+/ilo
+/.metals
+/.vscode
+.factorypath
+/src/test/resources/application-test.yml
+/application.log
