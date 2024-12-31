@@ -14,7 +14,6 @@ import net.laurus.ilo.AuthenticatedIloClient;
 import net.laurus.ilo.UnauthenticatedEndpoint;
 import net.laurus.ilo.UnauthenticatedIloClient;
 import net.laurus.network.IPv4Address;
-import net.laurus.util.NetworkUtil;
 
 @Service
 @Log
@@ -46,7 +45,7 @@ public class IloMappingService {
 	}
 
 	public String mapClient(IloRegistrationRequest clientObject) {
-		String iloKey = NetworkUtil.getIloUuidForClient(clientObject.getIloAddress());
+		String iloKey = "NEEDS_WORK";
 		if (!isClientMapped(clientObject.getHostClientId())) {
 			if (iloKey != null) {
 				clientAddressMappings.put(clientObject.getIloAddress(), iloKey);
