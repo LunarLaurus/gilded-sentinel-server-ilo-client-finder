@@ -126,25 +126,31 @@ public class IloClientFinder {
 
 	@Scheduled(fixedRate = 1000 * 60 * 10, initialDelay = 1000 * 5)
 	private void scanNetworkForClients() {
-		if (cachedAddresses != null) {
-			log.info("Seeking active clients");
-			activeClients = NetworkUtil.mapClientsToBitmap(cachedAddresses, IloClientFinder::isIloClient,
-					subnetMaskAddress, threadPool, blacklistedDeviceHashes);
-			for (int i : activeClients.getActiveIndexes()) {
-				var ip = cachedAddresses.get(i);
-				if (ip != null) {
-					if (!redisClient.getStringValue(ip.getAddress()).equals("true")) {
-						log.info("Sending IloRegistrationRequest for index " + i);
-						redisClient.setStringValue(ip.getAddress(), "true");
-						redisClient.setStringValue(ip.getAddress() + "-health", "5");
-						queue.processNewClientRequest(
-								new IloRegistrationRequest(ip, "Discovery-" + ip.getAddress().replace(".", "")));
+		if (cachedAddresses == null) {
+			return;
+		}
 
-					}
-				}
+		log.info("Scanning for active clients.");
+		activeClients = NetworkUtil.mapClientsToBitmap(cachedAddresses, IloClientFinder::isIloClient, subnetMaskAddress,
+				threadPool, blacklistedDeviceHashes);
+
+		for (int index : activeClients.getActiveIndexes()) {
+			IPv4Address ip = cachedAddresses.get(index);
+			if (ip == null) {
+				continue;
+			}
+
+			String redisValue = redisClient.getStringValue(ip.getAddress());
+			if (!"true".equals(redisValue)) { // Safely compare against "true"
+				log.info("Registering new Ilo client at index {}", index);
+				redisClient.setStringValue(ip.getAddress(), "true");
+				redisClient.setStringValue(ip.getAddress() + "-health", "5");
+				queue.processNewClientRequest(
+						new IloRegistrationRequest(ip, "Discovery-" + ip.getAddress().replace(".", "")));
 			}
 		}
 	}
+
 
 	@Scheduled(fixedRate = 1000 * 60)
 	private void heartbeatClients() {
