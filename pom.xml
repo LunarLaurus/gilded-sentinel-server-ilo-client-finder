@@ -22,7 +22,7 @@
 		<dependency>
 			<groupId>net.laurus</groupId>
 			<artifactId>laurus-core</artifactId>
-			<version>0.0.32</version>
+			<version>0.0.33</version>
 		</dependency>
 		<!-- Spring Boot Starter for RabbitMQ -->
 		<dependency>

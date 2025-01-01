@@ -54,7 +54,7 @@ public class IloClientService {
 
     public void updateUnauthenticatedClientData(UnauthenticatedIloClient client) {
         if (client.canUpdate()) {
-            client.updateUnauthenticatedClient();
+            client.update();
         }
     }
 
