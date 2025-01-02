@@ -1,6 +1,6 @@
-package net.laurus.component;
+package net.laurus.service;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -11,9 +11,9 @@ import net.laurus.ilo.AbstractIloAuthService;
 import net.laurus.network.IloUser;
 
 @Getter
-@Component
+@Service
 @RequiredArgsConstructor
-public class IloAuthService extends AbstractIloAuthService {
+public class AuthService extends AbstractIloAuthService {
 
 	private final SecretsConfig secretsConfig;
 

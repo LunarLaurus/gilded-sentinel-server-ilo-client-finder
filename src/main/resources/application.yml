@@ -12,13 +12,6 @@ system:
       base-ip: "192.168.0.0"
       subnet-mask: "255.255.255.0"
 
-redis:
-  host: ${SYSTEM_REDIS_ADDRESS:192.168.0.100}
-  port: ${SYSTEM_REDIS_PORT:6379}
-  maxTotal: 50
-  maxIdle: 30
-  minIdle: 10
-
 
 # Spring configuration
 spring:
