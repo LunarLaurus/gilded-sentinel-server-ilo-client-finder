@@ -13,8 +13,24 @@ import lombok.Setter;
 public class SystemConfig {
 
     private boolean obfuscateSecrets;
-    private String iloUsername;
-    private String iloPassword;
     private String allowedIp;
-    
+    private IloConfig ilo;
+
+    @Getter
+    @Setter
+    public static class IloConfig {
+    	
+        private String username;
+        private String password;
+        private int clientTimeoutConnect;
+        private int clientTimeoutRead;
+        private NetworkConfig network;
+
+        @Getter
+        @Setter
+        public static class NetworkConfig {
+            private String baseIp;
+            private String subnetMask;
+        }
+    }
 }

@@ -34,7 +34,7 @@ public class NetworkCache {
     private final List<IPv4Address> blacklist = Collections.synchronizedList(new ArrayList<>());
     @Getter
     @Setter
-    private Bitmap activeClients = new Bitmap(255);
+    private Bitmap activeClients = new Bitmap(256);
 
     /**
      * Retrieves the cached list of IPv4 addresses.

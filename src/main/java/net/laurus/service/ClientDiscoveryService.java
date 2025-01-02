@@ -3,6 +3,7 @@ package net.laurus.service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +34,7 @@ public class ClientDiscoveryService {
         networkCache.setCachedAddresses(subnetManager.generateAddressRange());
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 10, initialDelay = 1000 * 5)
+    @Scheduled(fixedRate = 1000 * 60 * 5, initialDelay = 1000 * 5)
     public void scanNetworkForClients() {
         final List<IPv4Address> addresses = networkCache.getCachedAddresses();
         if (addresses.isEmpty()) {
@@ -58,7 +59,7 @@ public class ClientDiscoveryService {
     }
     
 
-    @Scheduled(fixedRate = 1000 * 15, initialDelay = 1000 * 30)
+    @Scheduled(fixedRate = 1000 * 30, initialDelay = 1000 * 30)
     public void processDiscoveredClients() {
         final List<Integer> activeindicies = networkCache.getActiveClients().getActiveIndexes();
         if (activeindicies.isEmpty()) {

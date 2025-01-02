@@ -35,12 +35,12 @@ public class AuthService extends AbstractIloAuthService {
 
 	@Override
 	protected String getConfigSuppliedIloUsername() {
-		return systemConfig.getIloUsername();
+		return systemConfig.getIlo().getUsername();
 	}
 
 	@Override
 	protected String getConfigSuppliedIloPassword() {
-		return systemConfig.getIloPassword();
+		return systemConfig.getIlo().getPassword();
 	}
 
 }

@@ -5,12 +5,15 @@ server:
       
 system:
    obfuscate-secrets: true
-   ilo-username: ${SYSTEM_ILO_USER:changeme}
-   ilo-password: ${SYSTEM_ILO_PASSWORD:changeme}
    allowed-ip: ${SYSTEM_ALLOWED_IP:localhost}
-   network:
-      base-ip: "192.168.0.0"
-      subnet-mask: "255.255.255.0"
+   ilo:   
+      username: ${SYSTEM_ILO_USER:changeme}
+      password: ${SYSTEM_ILO_PASSWORD:changeme}
+      client-timeout-connect: ${SYSTEM_ILO_CLIENT_TIMEOUT_CONNECT:2000}
+      client-timeout-read: ${SYSTEM_ILO_CLIENT_TIMEOUT_READ:1000}
+      network:
+         base-ip: "192.168.0.0"
+         subnet-mask: "255.255.255.0"
 
 
 # Spring configuration

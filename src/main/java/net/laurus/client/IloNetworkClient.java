@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.laurus.component.NetworkCache;
 import net.laurus.component.RegistrationCache;
+import net.laurus.config.SystemConfig;
 import net.laurus.network.IPv4Address;
 
 /**
@@ -35,12 +36,14 @@ import net.laurus.network.IPv4Address;
 @RequiredArgsConstructor
 @Slf4j
 public class IloNetworkClient {
+	
+    private static final String ILO_ENDPOINT_TEMPLATE = "https://%s/xmldata?item=all";
 
     static {
     	disableHostnameVerification();
     }
-	
-    private static final String ILO_ENDPOINT_TEMPLATE = "https://%s/xmldata?item=all";
+
+	private final SystemConfig systemConfig;
     private final NetworkCache networkCache;
 	private final RegistrationCache registrationHandler;
 
@@ -69,8 +72,8 @@ public class IloNetworkClient {
                 String endpoint = String.format(ILO_ENDPOINT_TEMPLATE, ipAddress.getAddress());
                 HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
                 connection.setRequestMethod("GET");
-                connection.setConnectTimeout(2000); // 2 seconds for connection
-                connection.setReadTimeout(1000); // 1 second for response
+                connection.setConnectTimeout(systemConfig.getIlo().getClientTimeoutConnect());
+                connection.setReadTimeout(systemConfig.getIlo().getClientTimeoutRead());
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode != HttpURLConnection.HTTP_OK) {

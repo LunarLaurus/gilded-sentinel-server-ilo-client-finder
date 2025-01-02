@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.laurus.config.IpmiNetworkConfig;
+import net.laurus.config.SystemConfig;
 import net.laurus.network.IPv4Address;
 import net.laurus.network.Subnet;
 import net.laurus.network.SubnetMask;
@@ -30,7 +30,7 @@ import net.laurus.network.SubnetMask;
 @Getter
 public class SubnetManager {
 
-    private final IpmiNetworkConfig config;
+    private final SystemConfig config;
     private IPv4Address baseAddress;
     private SubnetMask subnetMask;
     private Subnet subnet;
@@ -46,8 +46,8 @@ public class SubnetManager {
     @PostConstruct
     private void initializeSubnet() {
         try {
-            baseAddress = new IPv4Address(config.getBaseIp());
-            subnetMask = new SubnetMask(config.getSubnetMask());
+            baseAddress = new IPv4Address(config.getIlo().getNetwork().getBaseIp());
+            subnetMask = new SubnetMask(config.getIlo().getNetwork().getSubnetMask());
             subnet = new Subnet(baseAddress, subnetMask);
             log.info("Initialized IloSubnetManager: base IP={}, subnet mask={}", baseAddress, subnetMask);
         } catch (IllegalArgumentException e) {
