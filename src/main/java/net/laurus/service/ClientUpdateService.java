@@ -31,10 +31,12 @@ public class ClientUpdateService {
 
 	public void addUnauthenticatedClient(UnauthenticatedIloClient client) {
 		unauthenticatedClients.put(client.getIloUuid(), client);
+		clientQueue.sendUnauthenticatedIloClientData(client);
 	}
 
 	public void addAuthenticatedClient(AuthenticatedIloClient client) {
 		authenticatedClients.put(client.getIloUuid(), client);
+		clientQueue.sendAuthenticatedIloClientData(client);
 	}
 
 	@Scheduled(fixedDelay = TASK_INTERVAL_UNAUTH_MS)

@@ -73,15 +73,11 @@ public class ClientDiscoveryService {
         log.info("Processing mapped clients bitmap. Active: "+bitmap.getActiveIndexes().size());
         bitmap.getActiveIndexes().stream().forEach( addressIndex -> {
             IPv4Address ip = networkCache.getCachedAddresses().get(addressIndex);
-            log.info("Got {} from {}", ip.getAddress(), addressIndex);
             boolean blacklisted = networkCache.isBlacklisted(ip);
             boolean ipRegistered = newClientQueue.getRegistrationHandler().isClientRegistered(ip);
             if (!blacklisted && !ipRegistered) {
                 log.info("Registering new Ilo client: {}", ip.getAddress());
                 newClientQueue.processNewClientRequest(new IloRegistrationRequest(ip));
-            }
-            else {
-                log.info("Failed registering new Ilo client: {}, {}, {}", ip.getAddress(), blacklisted, ipRegistered);                	
             }
         });
     }
