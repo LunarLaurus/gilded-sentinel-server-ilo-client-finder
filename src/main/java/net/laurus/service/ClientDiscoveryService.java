@@ -45,7 +45,7 @@ public class ClientDiscoveryService {
 
         CompletableFuture<Bitmap> futureBitmap = NetworkUtil.mapClientsToBitmapAsync(
                 addresses,
-                networkClient::isIloClientAsync,
+                networkClient::isIloClient,
                 subnetManager.getSubnetMask(),
                 networkCache.getBlacklist()
         );

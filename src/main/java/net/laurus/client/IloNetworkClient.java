@@ -57,7 +57,7 @@ public class IloNetworkClient {
      * @return A {@link CompletableFuture} containing {@code true} if the address
      *         is a valid iLO client, or {@code false} otherwise.
      */
-    public CompletableFuture<Boolean> isIloClientAsync(IPv4Address ipAddress) {
+    public CompletableFuture<Boolean> isIloClient(IPv4Address ipAddress) {
         if (networkCache.isBlacklisted(ipAddress)) {
             log.info("Skipping IP: {}", ipAddress.getAddress());
             return CompletableFuture.completedFuture(false);

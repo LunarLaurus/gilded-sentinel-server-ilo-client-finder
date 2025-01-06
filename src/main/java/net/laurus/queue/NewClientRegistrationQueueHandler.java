@@ -46,6 +46,7 @@ public class NewClientRegistrationQueueHandler {
 				if (!NetworkUtil.ping(cacheKey, 5000)) {
 					log.info("Client timed out after 5 seconds.");
 				} else {
+					registrationHandler.registerClient(cacheKey);
 					UnauthenticatedIloClient unauthClient = UnauthenticatedEndpoint
 							.getIloClient(clientObject.getIloAddress());
 					if (unauthClient != null) {
