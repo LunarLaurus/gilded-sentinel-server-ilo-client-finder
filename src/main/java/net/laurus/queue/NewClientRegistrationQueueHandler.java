@@ -1,5 +1,10 @@
 package net.laurus.queue;
 
+import static net.laurus.util.RabbitMqUtils.preparePayload;
+import static net.laurus.util.RabbitMqUtils.receivePayload;
+
+import java.io.IOException;
+
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -14,6 +19,7 @@ import net.laurus.ilo.UnauthenticatedEndpoint;
 import net.laurus.ilo.UnauthenticatedIloClient;
 import net.laurus.network.IPv4Address;
 import net.laurus.service.AuthService;
+import net.laurus.service.ClientHeartbeatService;
 import net.laurus.service.ClientUpdateService;
 import net.laurus.util.NetworkUtil;
 
@@ -24,17 +30,32 @@ public class NewClientRegistrationQueueHandler {
 
 	@Getter
 	private final RegistrationCache registrationHandler;
+	private final ClientHeartbeatService heartbeat;
 	private final ClientUpdateService iloClientService;
 	private final AuthService iloAuthService;
-    private final RabbitTemplate rabbitQueue;
-	
+	private final RabbitTemplate rabbitQueue;
+
+	/**
+	 * Sends an object to a RabbitMQ queue.
+	 *
+	 * @param clientObject The object to send.
+	 */
 	public void putNewRegistrationRequestOnQueue(IloRegistrationRequest clientObject) {
-        rabbitQueue.convertAndSend("newClientRequestQueue", clientObject);		
+		try {
+			byte[] compressedData = preparePayload(clientObject, true);
+			rabbitQueue.convertAndSend("newClientRequestQueue", compressedData);
+		} catch (IOException e) {
+			log.error("Error placing request on newClientRequestQueue: {}", e.getMessage());
+		}
 	}
 
 	@RabbitListener(queues = "newClientRequestQueue")
-	private void listenToNewClientRequestQueue(IloRegistrationRequest clientObject) {
-		processNewClientRequest(clientObject);
+	private void listenToNewClientRequestQueue(byte[] registrationRequest) {
+		try {
+			processNewClientRequest(receivePayload(registrationRequest, IloRegistrationRequest.class));
+		} catch (IOException e) {
+			log.error("Error processing request on newClientRequestQueue: {}", e.getMessage());
+		}
 	}
 
 	public void processNewClientRequest(IloRegistrationRequest clientObject) {
@@ -47,19 +68,18 @@ public class NewClientRegistrationQueueHandler {
 					log.info("Client timed out after 5 seconds.");
 				} else {
 					registrationHandler.registerClient(cacheKey);
+					heartbeat.updateClientTimestamp(cacheKey, System.currentTimeMillis());
 					UnauthenticatedIloClient unauthClient = UnauthenticatedEndpoint
 							.getIloClient(clientObject.getIloAddress());
 					if (unauthClient != null) {
 						iloClientService.addUnauthenticatedClient(unauthClient);
-					}
-
-					AuthenticatedIloClient authClient = AuthenticatedIloClient.from(iloAuthService.getDefaultIloUser(),
-							clientObject.getIloAddress(), unauthClient);
-					if (authClient != null) {
-						iloClientService.addAuthenticatedClient(authClient);
+						AuthenticatedIloClient authClient = AuthenticatedIloClient
+								.from(iloAuthService.getDefaultIloUser(), clientObject.getIloAddress(), unauthClient);
+						if (authClient != null) {
+							iloClientService.addAuthenticatedClient(authClient);
+						}
 					}
 				}
-
 			} catch (Exception e) {
 				log.error("Error registering client {}: {}", clientObject, e.getMessage());
 				e.printStackTrace();
@@ -69,5 +89,5 @@ public class NewClientRegistrationQueueHandler {
 			return;
 		}
 	}
-	
+
 }

@@ -1,6 +1,5 @@
 package net.laurus.service;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -19,13 +18,14 @@ import net.laurus.queue.SendClientUpdatesQueueHandler;
 @RequiredArgsConstructor
 public class ClientUpdateService {
 
-	private static final int TASK_INTERVAL_UNAUTH_MS = 15000;
-	private static final int TASK_INTERVAL_AUTH_MS = 5000;
+	private static final int TASK_INTERVAL_UNAUTH_MS = 10000;
+	private static final int TASK_INTERVAL_AUTH_MS = 1000;
 
 	private final ExecutorService updateExecutor = Executors.newWorkStealingPool();
 	private final Map<String, UnauthenticatedIloClient> unauthenticatedClients = new ConcurrentHashMap<>();
 	private final Map<String, AuthenticatedIloClient> authenticatedClients = new ConcurrentHashMap<>();
 
+	private final ClientHeartbeatService heartbeat;
 	private final RegistrationCache registrationHandler;
 	private final SendClientUpdatesQueueHandler clientQueue;
 
@@ -45,6 +45,7 @@ public class ClientUpdateService {
 			if (registrationHandler.isClientRegistered(client.getIloAddress())
 					&& client.canUpdate()) {
 				client.update();
+				heartbeat.updateClientTimestamp(client.getIloAddress(), client.getLastUpdateTime());
 				clientQueue.sendUnauthenticatedIloClientData(client);
 			}
 		}));
@@ -56,16 +57,10 @@ public class ClientUpdateService {
 			if (registrationHandler.isClientRegistered(client.getIloAddress())
 					&& client.canUpdate()) {
 				client.update();
+				heartbeat.updateClientTimestamp(client.getIloAddress(), client.getLastUpdateTime());
 				clientQueue.sendAuthenticatedIloClientData(client);
 			}
 		}));
 	}
-
-	public Collection<UnauthenticatedIloClient> getUnauthenticatedClients() {
-		return unauthenticatedClients.values();
-	}
-
-	public Collection<AuthenticatedIloClient> getAuthenticatedClients() {
-		return authenticatedClients.values();
-	}
+	
 }

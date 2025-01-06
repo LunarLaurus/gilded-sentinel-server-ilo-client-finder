@@ -3,7 +3,6 @@ package net.laurus.service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,68 +18,112 @@ import net.laurus.network.IPv4Address;
 import net.laurus.queue.NewClientRegistrationQueueHandler;
 import net.laurus.util.NetworkUtil;
 
+/**
+ * Service responsible for discovering and processing iLO clients in the network.
+ * <p>
+ * This service periodically scans the network for iLO clients and processes newly discovered clients.
+ * It relies on {@link NetworkCache}, {@link IloNetworkClient}, and {@link SubnetManager} for caching, 
+ * validating, and managing network clients.
+ * </p>
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ClientDiscoveryService {
 
+    private static final int NETWORK_SCAN_RATE_MS = 1000 * 60 * 5; // 5 minutes
+    private static final int NETWORK_SCAN_INITIAL_DELAY_MS = 1000 * 5; // 5 seconds
+    private static final int CLIENT_PROCESS_RATE_MS = 1000 * 30; // 30 seconds
+    private static final int CLIENT_PROCESS_INITIAL_DELAY_MS = 1000 * 30; // 30 seconds
+
     private final NetworkCache networkCache;
     private final IloNetworkClient networkClient;
     private final NewClientRegistrationQueueHandler newClientQueue;
     private final SubnetManager subnetManager;
-    
+
+    /**
+     * Initializes the service by populating the {@link NetworkCache} with the generated address range.
+     */
     @PostConstruct
-    public void setup() {
-        networkCache.setCachedAddresses(subnetManager.generateAddressRange());
+    public void initializeCache() {
+        List<IPv4Address> addressRange = subnetManager.generateAddressRange();
+        networkCache.setCachedAddresses(addressRange);
+        log.info("Initialized network cache with {} addresses.", addressRange.size());
     }
 
-    @Scheduled(fixedRate = 1000 * 60 * 5, initialDelay = 1000 * 5)
+    /**
+     * Periodically scans the network to identify active iLO clients.
+     * <p>
+     * This method runs every 5 minutes with an initial delay of 5 seconds.
+     * It maps active clients to a bitmap and updates the {@link NetworkCache}.
+     * </p>
+     */
+    @Scheduled(fixedRate = NETWORK_SCAN_RATE_MS, initialDelay = NETWORK_SCAN_INITIAL_DELAY_MS)
     public void scanNetworkForClients() {
-        final List<IPv4Address> addresses = networkCache.getCachedAddresses();
+        List<IPv4Address> addresses = networkCache.getCachedAddresses();
         if (addresses.isEmpty()) {
-            log.info("Found no client addresses in network cache.");
+            log.info("No client addresses found in network cache.");
             return;
         }
-        log.info("Found "+addresses.size()+" client addresses in network cache.");
 
+        log.info("Scanning {} addresses for active clients.", addresses.size());
         CompletableFuture<Bitmap> futureBitmap = NetworkUtil.mapClientsToBitmapAsync(
                 addresses,
                 networkClient::isIloClient,
                 subnetManager.getSubnetMask(),
                 networkCache.getBlacklist()
         );
-        try {
-            log.info("Populating client bitmap.");
-            networkCache.setActiveClients(futureBitmap.join());
-            log.info("Done discovering clients.");
-        } catch (Exception e) {
-            log.error("Error scanning network: {}", e.getMessage());
-        }
-    }
-    
 
-    @Scheduled(fixedRate = 1000 * 30, initialDelay = 1000 * 30)
-    public void processDiscoveredClients() {
-        final List<Integer> activeindicies = networkCache.getActiveClients().getActiveIndexes();
-        if (activeindicies.isEmpty()) {
-            log.debug("Found no active indicies in client bitmap.");
-            return;
-        }
-        log.info("Found "+activeindicies.size()+" active indicies in client bitmap.");
-        processClientRequests(networkCache.getActiveClients());
-    }
-    
-    private void processClientRequests(Bitmap bitmap) {
-        log.info("Processing mapped clients bitmap. Active: "+bitmap.getActiveIndexes().size());
-        bitmap.getActiveIndexes().stream().forEach( addressIndex -> {
-            IPv4Address ip = networkCache.getCachedAddresses().get(addressIndex);
-            boolean blacklisted = networkCache.isBlacklisted(ip);
-            boolean ipRegistered = newClientQueue.getRegistrationHandler().isClientRegistered(ip);
-            if (!blacklisted && !ipRegistered) {
-                log.info("Registering new Ilo client: {}", ip.getAddress());
-                newClientQueue.processNewClientRequest(new IloRegistrationRequest(ip));
-            }
+        futureBitmap.thenAccept(bitmap -> {
+            networkCache.setActiveClients(bitmap);
+            log.info("Updated active client bitmap with {} active clients.", bitmap.getActiveIndexes().size());
+        }).exceptionally(e -> {
+            log.error("Error during network scan: {}", e.getMessage());
+            return null;
         });
     }
 
+    /**
+     * Periodically processes newly discovered active clients.
+     * <p>
+     * This method runs every 30 seconds with an initial delay of 30 seconds.
+     * It iterates over the active client bitmap, checking each address for registration or blacklist status,
+     * and registers unregistered clients.
+     * </p>
+     */
+    @Scheduled(fixedRate = CLIENT_PROCESS_RATE_MS, initialDelay = CLIENT_PROCESS_INITIAL_DELAY_MS)
+    public void processDiscoveredClients() {
+        Bitmap activeClients = networkCache.getActiveClients();
+        List<Integer> activeIndexes = activeClients.getActiveIndexes();
+
+        if (activeIndexes.isEmpty()) {
+            log.debug("No active clients found in bitmap.");
+            return;
+        }
+
+        log.info("Processing {} active clients.", activeIndexes.size());
+        activeIndexes.parallelStream()
+            .map(index -> networkCache.getCachedAddresses().get(index))
+            .filter(ip -> !newClientQueue.getRegistrationHandler().isClientRegistered(ip)) // Early check
+            .forEach(this::processClient);
+    }
+
+    /**
+     * Processes a single client, ensuring it is not blacklisted before registration.
+     *
+     * @param ip The {@link IPv4Address} to process.
+     */
+    private void processClient(IPv4Address ip) {
+        try {
+            if (networkCache.isBlacklisted(ip)) {
+                log.debug("Skipping blacklisted IP: {}", ip.getAddress());
+                return;
+            }
+
+            log.info("Registering new iLO client: {}", ip.getAddress());
+            newClientQueue.processNewClientRequest(new IloRegistrationRequest(ip));
+        } catch (Exception e) {
+            log.error("Error processing client {}: {}", ip.getAddress(), e.getMessage());
+        }
+    }
 }

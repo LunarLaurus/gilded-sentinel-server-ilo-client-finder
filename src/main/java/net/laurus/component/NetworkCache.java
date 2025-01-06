@@ -14,14 +14,13 @@ import net.laurus.data.Bitmap;
 import net.laurus.network.IPv4Address;
 
 /**
- * Handles caching of network-related data for iLO clients, including address
- * caching and blacklisting.
+ * Handles caching of network-related data for iLO clients.
  * <p>
- * This class is responsible for:
+ * Responsibilities include:
  * <ul>
  *   <li>Maintaining a cache of IPv4 addresses for iLO clients.</li>
- *   <li>Providing thread-safe access to the cached addresses.</li>
- *   <li>Managing a blacklist of addresses that should be ignored.</li>
+ *   <li>Providing thread-safe access to cached addresses.</li>
+ *   <li>Managing a blacklist of addresses to ignore during operations.</li>
  * </ul>
  */
 @Component
@@ -40,15 +39,15 @@ public class NetworkCache {
      * Retrieves the cached list of IPv4 addresses.
      * <p>
      * This method ensures thread-safe access to the cached addresses.
-     * If no addresses are cached, it returns an empty list.
-     * 
+     * If no addresses are cached, an empty list is returned.
+     *
      * @return A list of {@link IPv4Address} objects representing cached addresses,
      *         or an empty list if no addresses are cached.
      */
     public List<IPv4Address> getCachedAddresses() {
         cacheLock.lock();
         try {
-            return cachedAddresses == null ? new ArrayList<>() : new ArrayList<>(cachedAddresses);
+            return cachedAddresses == null ? Collections.emptyList() : cachedAddresses;
         } finally {
             cacheLock.unlock();
         }
@@ -59,13 +58,13 @@ public class NetworkCache {
      * <p>
      * This method replaces the current cached addresses with the provided list
      * in a thread-safe manner.
-     * 
+     *
      * @param addresses A list of {@link IPv4Address} objects to be cached.
      */
     public void setCachedAddresses(List<IPv4Address> addresses) {
         cacheLock.lock();
         try {
-            this.cachedAddresses = new ArrayList<>(addresses);
+            cachedAddresses = Collections.unmodifiableList(new ArrayList<>(addresses));
             log.info("Cached {} addresses.", addresses.size());
         } finally {
             cacheLock.unlock();
@@ -75,8 +74,7 @@ public class NetworkCache {
     /**
      * Clears the cached IPv4 addresses.
      * <p>
-     * This forces regeneration of the cache when the cached addresses are next
-     * requested.
+     * This forces regeneration of the cache when the cached addresses are next requested.
      */
     public void clearCache() {
         cacheLock.lock();
@@ -91,9 +89,8 @@ public class NetworkCache {
     /**
      * Checks if a given IPv4 address is blacklisted.
      * <p>
-     * The blacklist is used to store addresses that should be ignored during
-     * network scans or other operations.
-     * 
+     * Blacklisted addresses are ignored during network scans or other operations.
+     *
      * @param address The {@link IPv4Address} to check.
      * @return {@code true} if the address is blacklisted, {@code false} otherwise.
      */
@@ -105,7 +102,7 @@ public class NetworkCache {
      * Adds an IPv4 address to the blacklist.
      * <p>
      * Blacklisted addresses are ignored during network scans or other operations.
-     * 
+     *
      * @param address The {@link IPv4Address} to add to the blacklist.
      */
     public void addToBlacklist(IPv4Address address) {

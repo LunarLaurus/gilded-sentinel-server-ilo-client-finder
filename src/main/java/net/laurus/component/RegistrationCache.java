@@ -21,7 +21,7 @@ public class RegistrationCache {
      */
     @Cacheable(value = "clientRegistrationCache", key = "#clientIp.getAddress()")
     public boolean isClientRegistered(IPv4Address clientIp) {
-        log.info("Cache miss for client: {}. Assuming not registered.", clientIp.getAddress());
+        log.debug("Cache miss for client: {}. Assuming not registered.", clientIp.getAddress());
         return false; // Default return when the key is not in the cache
     }
 

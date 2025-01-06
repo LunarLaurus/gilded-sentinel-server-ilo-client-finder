@@ -3,8 +3,10 @@ package net.laurus.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
+import net.laurus.network.IPv4Address;
 
 @Configuration
 @ConfigurationProperties(prefix = "system")
@@ -31,6 +33,13 @@ public class SystemConfig {
         public static class NetworkConfig {
             private String baseIp;
             private String subnetMask;
+
+            private IPv4Address baseAddress;
+
+            @PostConstruct
+            public void setupBaseIp() {
+            	baseAddress = new IPv4Address(getBaseIp());
+            }
         }
     }
 }
