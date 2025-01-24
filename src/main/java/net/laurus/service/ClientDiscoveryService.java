@@ -116,14 +116,14 @@ public class ClientDiscoveryService {
     private void processClient(IPv4Address ip) {
         try {
             if (networkCache.isBlacklisted(ip)) {
-                log.debug("Skipping blacklisted IP: {}", ip.getAddress());
+                log.debug("Skipping blacklisted IP: {}", ip.toString());
                 return;
             }
 
-            log.info("Registering new iLO client: {}", ip.getAddress());
+            log.info("Registering new iLO client: {}", ip.toString());
             newClientQueue.processNewClientRequest(new IloRegistrationRequest(ip));
         } catch (Exception e) {
-            log.error("Error processing client {}: {}", ip.getAddress(), e.getMessage());
+            log.error("Error processing client {}: {}", ip.toString(), e.getMessage());
         }
     }
 }

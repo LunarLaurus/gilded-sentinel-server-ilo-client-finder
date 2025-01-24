@@ -1,7 +1,5 @@
 package net.laurus.component;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -68,15 +66,7 @@ public class SubnetManager {
 	 *         entire subnet range.
 	 */
 	public List<IPv4Address> generateAddressRange() {
-		int start = subnet.calculateNetworkStart();
-		int end = subnet.calculateNetworkEnd();
-		List<IPv4Address> addresses = new ArrayList<>(end - start + 1);
-
-		for (int i = start; i <= end; i++) {
-			addresses.add(IPv4Address.fromInteger(i));
-		}
-
-		return Collections.unmodifiableList(addresses);
+		return subnet.getAllAddresses();
 	}
 
 	/**

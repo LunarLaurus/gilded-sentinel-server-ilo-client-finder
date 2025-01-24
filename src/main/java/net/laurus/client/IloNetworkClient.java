@@ -48,11 +48,11 @@ public class IloNetworkClient {
      */
     public CompletableFuture<Boolean> isIloClient(IPv4Address ipAddress) {
         if (networkCache.isBlacklisted(ipAddress)) {
-            log.info("Skipping blacklisted IP: {}", ipAddress.getAddress());
+            log.info("Skipping blacklisted IP: {}", ipAddress.toString());
             return CompletableFuture.completedFuture(false);
         }
         if (registrationHandler.isClientRegistered(ipAddress)) {
-            log.info("Skipping registered IP: {}", ipAddress.getAddress());
+            log.info("Skipping registered IP: {}", ipAddress.toString());
             return CompletableFuture.completedFuture(true);
         }
 
@@ -60,7 +60,7 @@ public class IloNetworkClient {
     }
 
     private boolean validateIloClient(IPv4Address ipAddress) {
-        String endpoint = String.format(ILO_ENDPOINT_TEMPLATE, ipAddress.getAddress());
+        String endpoint = String.format(ILO_ENDPOINT_TEMPLATE, ipAddress.toString());
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
             connection.setRequestMethod("GET");
@@ -68,7 +68,7 @@ public class IloNetworkClient {
             connection.setReadTimeout(systemConfig.getIlo().getClientTimeoutRead());
 
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                log.info("Non-OK response for IP {}: {}", ipAddress.getAddress(), connection.getResponseCode());
+                log.info("Non-OK response for IP {}: {}", ipAddress.toString(), connection.getResponseCode());
                 networkCache.addToBlacklist(ipAddress);
                 return false;
             }
@@ -79,7 +79,7 @@ public class IloNetworkClient {
 
             boolean isValid = isValidIloResponse(response);
             if (!isValid) {
-                log.info("Invalid response for IP {}. Blacklisting.", ipAddress.getAddress());
+                log.info("Invalid response for IP {}. Blacklisting.", ipAddress.toString());
                 networkCache.addToBlacklist(ipAddress);
             }
             return isValid;
@@ -92,7 +92,7 @@ public class IloNetworkClient {
 
     private void handleNetworkError(IPv4Address ipAddress, Exception e) {
         if (!"Connect timed out".equalsIgnoreCase(e.getMessage())) {
-            log.error("Error validating IP {}: {}", ipAddress.getAddress(), e.getMessage());
+            log.error("Error validating IP {}: {}", ipAddress.toString(), e.getMessage());
         }
         networkCache.addToBlacklist(ipAddress);
     }

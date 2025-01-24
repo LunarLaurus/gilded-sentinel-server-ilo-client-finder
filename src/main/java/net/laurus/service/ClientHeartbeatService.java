@@ -68,7 +68,7 @@ public class ClientHeartbeatService {
 	 */
 	public void updateClientTimestamp(IPv4Address clientIp, long timestamp) {
 		clientCache.put(clientIp, timestamp);
-		log.info("Updated lastUpdatedTimeForClientService for client {}: {}", clientIp.getAddress(),
+		log.info("Updated lastUpdatedTimeForClientService for client {}: {}", clientIp.toString(),
 				Instant.ofEpochMilli(timestamp));
 	}
 
@@ -101,7 +101,7 @@ public class ClientHeartbeatService {
 	 */
 	public void evictClient(IPv4Address clientIp) {
 		clientCache.invalidate(clientIp);
-		log.info("Evicted client {} from cache.", clientIp.getAddress());
+		log.info("Evicted client {} from cache.", clientIp.toString());
 	}
 
 	/**
@@ -153,13 +153,13 @@ public class ClientHeartbeatService {
 		try {
 			// Skip blacklisted clients
 			if (networkCache.isBlacklisted(clientIp)) {
-				log.info("Skipping blacklisted client: {}", clientIp.getAddress());
+				log.info("Skipping blacklisted client: {}", clientIp.toString());
 				return;
 			}
 
 			// Check if the client is present in the cache
 			if (!isClientCached(clientIp)) {
-				log.warn("Client {} evicted from cache due to expiry.", clientIp.getAddress());
+				log.warn("Client {} evicted from cache due to expiry.", clientIp.toString());
 				return;
 			}
 
@@ -167,13 +167,13 @@ public class ClientHeartbeatService {
 			boolean isClientResponsive = isClientResponsiveBasedOnLastUpdate(clientIp);
 
 			if (isClientResponsive) {
-				log.info("Client {} responded to heartbeat.", clientIp.getAddress());
+				log.info("Client {} responded to heartbeat.", clientIp.toString());
 				updateClientTimestamp(clientIp, System.currentTimeMillis());
 			} else {
-				log.warn("Client {} failed to respond to heartbeat.", clientIp.getAddress());
+				log.warn("Client {} failed to respond to heartbeat.", clientIp.toString());
 			}
 		} catch (Exception e) {
-			log.error("Error during heartbeat check for client {}: {}", clientIp.getAddress(), e.getMessage(), e);
+			log.error("Error during heartbeat check for client {}: {}", clientIp.toString(), e.getMessage(), e);
 		}
 	}
 
@@ -192,7 +192,7 @@ public class ClientHeartbeatService {
 			Long lastUpdatedTime = getClientTimestamp(clientIp);
 
 			if (lastUpdatedTime == null) {
-				log.warn("No lastUpdatedTime found for client {}. Assuming unresponsive.", clientIp.getAddress());
+				log.warn("No lastUpdatedTime found for client {}. Assuming unresponsive.", clientIp.toString());
 				return false;
 			}
 
@@ -202,12 +202,12 @@ public class ClientHeartbeatService {
 			// Determine if the client is responsive
 			boolean isResponsive = timeSinceLastUpdate <= responsivenessThresholdMs;
 
-			log.debug("Client {} last updated {} ms ago. Responsive: {}", clientIp.getAddress(), timeSinceLastUpdate,
+			log.debug("Client {} last updated {} ms ago. Responsive: {}", clientIp.toString(), timeSinceLastUpdate,
 					isResponsive);
 
 			return isResponsive;
 		} catch (Exception e) {
-			log.error("Error determining responsiveness for client {}: {}", clientIp.getAddress(), e.getMessage(), e);
+			log.error("Error determining responsiveness for client {}: {}", clientIp.toString(), e.getMessage(), e);
 			return false;
 		}
 	}

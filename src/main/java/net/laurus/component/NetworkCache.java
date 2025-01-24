@@ -107,6 +107,6 @@ public class NetworkCache {
      */
     public void addToBlacklist(IPv4Address address) {
         blacklist.add(address);
-        log.info("Blacklisted address: {}", address.getAddress());
+        log.info("Blacklisted address: {}", address.toString());
     }
 }
