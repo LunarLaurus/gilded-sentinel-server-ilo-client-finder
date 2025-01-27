@@ -9,6 +9,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
@@ -24,7 +25,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 	}
 
 	@Override
-	public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+	public void configureTasks(@NonNull ScheduledTaskRegistrar taskRegistrar) {
 		taskRegistrar.setScheduler(taskExecutor());
 	}
 
