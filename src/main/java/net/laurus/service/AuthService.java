@@ -5,19 +5,19 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.laurus.config.SecretsConfig;
-import net.laurus.config.SystemConfig;
 import net.laurus.ilo.AbstractIloAuthService;
 import net.laurus.network.IloUser;
+import net.laurus.spring.config.SecretsProperties;
+import net.laurus.spring.config.SystemProperties;
 
 @Getter
 @Service
 @RequiredArgsConstructor
 public class AuthService extends AbstractIloAuthService {
 
-	private final SecretsConfig secretsConfig;
+	private final SecretsProperties secretsConfig;
 
-	private final SystemConfig systemConfig;
+	private final SystemProperties systemConfig;
 
 	private IloUser defaultIloUser;
 

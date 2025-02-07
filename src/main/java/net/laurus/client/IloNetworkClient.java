@@ -19,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.laurus.component.NetworkCache;
 import net.laurus.component.RegistrationCache;
-import net.laurus.config.SystemConfig;
 import net.laurus.network.IPv4Address;
+import net.laurus.spring.config.SystemProperties;
 
 /**
  * Handles network interactions for iLO client validation.
@@ -36,7 +36,7 @@ public class IloNetworkClient {
         disableHostnameVerification();
     }
 
-    private final SystemConfig systemConfig;
+    private final SystemProperties systemConfig;
     private final NetworkCache networkCache;
     private final RegistrationCache registrationHandler;
 

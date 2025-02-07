@@ -8,10 +8,10 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.laurus.config.SystemConfig;
 import net.laurus.network.IPv4Address;
 import net.laurus.network.Subnet;
 import net.laurus.network.SubnetMask;
+import net.laurus.spring.config.SystemProperties;
 
 /**
  * Manages subnet-related operations for iLO devices.
@@ -29,14 +29,14 @@ import net.laurus.network.SubnetMask;
 @Getter
 public class SubnetManager {
 
-	private final SystemConfig config;
+	private final SystemProperties config;
 	private IPv4Address baseAddress;
 	private SubnetMask subnetMask;
 	private Subnet subnet;
 
 	/**
 	 * Initializes the subnet based on the network configuration provided in
-	 * {@link SystemConfig}.
+	 * {@link SystemProperties}.
 	 * <p>
 	 * This method validates the base IP address and subnet mask, then calculates
 	 * the subnet.

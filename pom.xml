@@ -13,12 +13,18 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.release>17</maven.compiler.release>
+        <laurus.version>0.0.54</laurus.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>net.laurus</groupId>
             <artifactId>laurus-core</artifactId>
-            <version>0.0.44</version>
+            <version>${laurus.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.laurus</groupId>
+            <artifactId>laurus-core-spring</artifactId>
+            <version>${laurus.version}</version>
         </dependency>
         <!-- Spring Boot Starter for RabbitMQ -->
         <dependency>
