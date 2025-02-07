@@ -1,14 +1,14 @@
 package net.laurus.queue;
 
-import static net.laurus.util.RabbitMqUtils.preparePayload;
-import static net.laurus.util.RabbitMqUtils.receivePayload;
+import static net.laurus.spring.service.RabbitQueueService.DEFAULT_QUEUE_CONFIG;
+import static net.laurus.util.RabbitMqUtils.processPayload;
 
 import java.io.IOException;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import net.laurus.network.IPv4Address;
 import net.laurus.service.ClientHeartbeatService;
 import net.laurus.service.ClientUpdateService;
 import net.laurus.spring.service.IloAuthService;
+import net.laurus.spring.service.RabbitQueueService;
 import net.laurus.util.NetworkUtil;
 
 @Service
@@ -33,7 +34,16 @@ public class NewClientRegistrationQueueHandler {
 	private final ClientHeartbeatService heartbeat;
 	private final ClientUpdateService iloClientService;
 	private final IloAuthService iloAuthService;
-	private final RabbitTemplate rabbitQueue;
+	private final RabbitQueueService rabbitQueueService;
+
+	public static final String QUEUE_NAME_NEW_CLIENT_REQUEST = "newClientRequestQueue";
+	
+	@PostConstruct
+	public void setupQueues() {
+		if (!rabbitQueueService.doesQueueExist(QUEUE_NAME_NEW_CLIENT_REQUEST)){
+			rabbitQueueService.createQueue(QUEUE_NAME_NEW_CLIENT_REQUEST, DEFAULT_QUEUE_CONFIG);
+		}
+	}
 
 	/**
 	 * Sends an object to a RabbitMQ queue.
@@ -41,18 +51,13 @@ public class NewClientRegistrationQueueHandler {
 	 * @param clientObject The object to send.
 	 */
 	public void putNewRegistrationRequestOnQueue(IloRegistrationRequest clientObject) {
-		try {
-			byte[] compressedData = preparePayload(clientObject, true);
-			rabbitQueue.convertAndSend("newClientRequestQueue", compressedData);
-		} catch (IOException e) {
-			log.error("Error placing request on newClientRequestQueue: {}", e.getMessage());
-		}
+		rabbitQueueService.sendMessage(QUEUE_NAME_NEW_CLIENT_REQUEST, clientObject, true);
 	}
 
-	@RabbitListener(queues = "newClientRequestQueue")
+	@RabbitListener(queues = QUEUE_NAME_NEW_CLIENT_REQUEST)
 	private void listenToNewClientRequestQueue(byte[] registrationRequest) {
 		try {
-			processNewClientRequest(receivePayload(registrationRequest, IloRegistrationRequest.class));
+			processNewClientRequest(processPayload(registrationRequest, IloRegistrationRequest.class));
 		} catch (IOException e) {
 			log.error("Error processing request on newClientRequestQueue: {}", e.getMessage());
 		}

@@ -1,16 +1,15 @@
 package net.laurus.queue;
 
-import static net.laurus.util.RabbitMqUtils.preparePayload;
+import static net.laurus.spring.service.RabbitQueueService.DEFAULT_QUEUE_CONFIG;
 
-import java.io.IOException;
-
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.laurus.ilo.AuthenticatedIloClient;
 import net.laurus.ilo.UnauthenticatedIloClient;
+import net.laurus.spring.service.RabbitQueueService;
 
 /**
  * Handles queue operations for sending updates to client queues.
@@ -24,7 +23,20 @@ import net.laurus.ilo.UnauthenticatedIloClient;
 @RequiredArgsConstructor
 public class SendClientUpdatesQueueHandler {
 
-    private final RabbitTemplate rabbitQueue;
+	private final RabbitQueueService rabbitQueueService;
+
+	public static final String QUEUE_NAME_UNAUTHENTICATED = "unauthenticatedIloClientQueue";
+	public static final String QUEUE_NAME_AUTHENTICATED = "authenticatedIloClientQueue";
+	
+	@PostConstruct
+	public void setupQueues() {
+		if (!rabbitQueueService.doesQueueExist(QUEUE_NAME_UNAUTHENTICATED)){
+			rabbitQueueService.createQueue(QUEUE_NAME_UNAUTHENTICATED, DEFAULT_QUEUE_CONFIG);
+		}
+		if (!rabbitQueueService.doesQueueExist(QUEUE_NAME_AUTHENTICATED)){
+			rabbitQueueService.createQueue(QUEUE_NAME_AUTHENTICATED, DEFAULT_QUEUE_CONFIG);
+		}
+	}
 
     /**
      * Sends unauthenticated client data to the queue.
@@ -33,7 +45,7 @@ public class SendClientUpdatesQueueHandler {
      */
     public void sendUnauthenticatedIloClientData(UnauthenticatedIloClient clientObject) {
         log.info("Updating UnauthenticatedIloClient: {}", clientObject);
-        send("unauthenticatedIloClientQueue", clientObject);
+        send(QUEUE_NAME_UNAUTHENTICATED, clientObject);
     }
 
     /**
@@ -43,7 +55,7 @@ public class SendClientUpdatesQueueHandler {
      */
     public void sendAuthenticatedIloClientData(AuthenticatedIloClient clientObject) {
         log.info("Updating AuthenticatedIloClient: {}", clientObject);
-        send("authenticatedIloClientQueue", clientObject);
+        send(QUEUE_NAME_AUTHENTICATED, clientObject);
     }
 
     /**
@@ -56,12 +68,7 @@ public class SendClientUpdatesQueueHandler {
      * @param clientObject The object to send, which will be serialized and compressed.
      */
     private void send(String queueName, Object clientObject) {
-        try {
-            byte[] compressedData = preparePayload(clientObject, true);
-            rabbitQueue.convertAndSend(queueName, compressedData);
-            log.debug("Successfully sent data to queue: {}", queueName);
-        } catch (IOException e) {
-            log.error("Error placing request on {}: {}", queueName, e.getMessage(), e);
-        }
+        rabbitQueueService.sendMessage(queueName, clientObject, true);
+		log.debug("Successfully sent data to queue: {}", queueName);
     }
 }
