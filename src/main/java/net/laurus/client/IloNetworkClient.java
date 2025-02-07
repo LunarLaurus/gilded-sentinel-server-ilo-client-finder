@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.laurus.component.NetworkCache;
 import net.laurus.component.RegistrationCache;
 import net.laurus.network.IPv4Address;
-import net.laurus.spring.properties.SystemProperties;
+import net.laurus.spring.properties.IloProperties;
 
 /**
  * Handles network interactions for iLO client validation.
@@ -36,7 +36,7 @@ public class IloNetworkClient {
         disableHostnameVerification();
     }
 
-    private final SystemProperties systemConfig;
+    private final IloProperties iloConfig;
     private final NetworkCache networkCache;
     private final RegistrationCache registrationHandler;
 
@@ -64,8 +64,8 @@ public class IloNetworkClient {
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(systemConfig.getIlo().getClientTimeoutConnect());
-            connection.setReadTimeout(systemConfig.getIlo().getClientTimeoutRead());
+            connection.setConnectTimeout(iloConfig.getClientTimeoutConnect());
+            connection.setReadTimeout(iloConfig.getClientTimeoutRead());
 
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 log.info("Non-OK response for IP {}: {}", ipAddress.toString(), connection.getResponseCode());

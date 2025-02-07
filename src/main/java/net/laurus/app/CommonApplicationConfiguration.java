@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import lombok.RequiredArgsConstructor;
+import net.laurus.spring.properties.IloProperties;
 import net.laurus.spring.properties.SystemProperties;
 import net.laurus.spring.service.IloAuthService;
 import net.laurus.spring.service.RabbitQueueService;
@@ -17,6 +18,8 @@ import net.laurus.spring.service.RabbitQueueService;
 public class CommonApplicationConfiguration {
 
 	private final SystemProperties systemProps;
+	
+	private final IloProperties iloProps;
 
 	private final AmqpAdmin queueAdmin;
 
@@ -24,7 +27,7 @@ public class CommonApplicationConfiguration {
 
 	@Bean
 	public IloAuthService iloAuthService() {
-		return new IloAuthService(systemProps);
+		return new IloAuthService(systemProps, iloProps);
 	}
 
 	@Bean

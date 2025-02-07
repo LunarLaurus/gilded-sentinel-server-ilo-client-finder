@@ -126,7 +126,7 @@ public class ClientHeartbeatService {
 	@Scheduled(fixedRate = HEARTBEAT_INTERVAL_MS, initialDelay = INITIAL_DELAY_MS)
 	public void monitorRegisteredClients() {
 		List<IPv4Address> cachedAddresses = IPv4Address.fromBitmap(
-				authService.getSystemProperties().getIlo().getNetwork().getBaseAddress(),
+				authService.getIloProperties().getNetwork().getBaseAddress(),
 				networkCache.getActiveClients().getActiveIndexes());
 
 		if (cachedAddresses.isEmpty()) {

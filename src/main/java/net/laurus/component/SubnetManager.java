@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.laurus.network.IPv4Address;
 import net.laurus.network.Subnet;
 import net.laurus.network.SubnetMask;
+import net.laurus.spring.properties.IloProperties;
 import net.laurus.spring.properties.SystemProperties;
 
 /**
@@ -29,7 +30,7 @@ import net.laurus.spring.properties.SystemProperties;
 @Getter
 public class SubnetManager {
 
-	private final SystemProperties config;
+	private final IloProperties config;
 	private IPv4Address baseAddress;
 	private SubnetMask subnetMask;
 	private Subnet subnet;
@@ -47,8 +48,8 @@ public class SubnetManager {
 	@PostConstruct
 	private void initializeSubnet() {
 		try {
-			baseAddress = new IPv4Address(config.getIlo().getNetwork().getBaseIp());
-			subnetMask = new SubnetMask(config.getIlo().getNetwork().getSubnetMask());
+			baseAddress = new IPv4Address(config.getNetwork().getBaseIp());
+			subnetMask = new SubnetMask(config.getNetwork().getSubnetMask());
 			subnet = new Subnet(baseAddress, subnetMask);
 			log.info("Initialized SubnetManager: base IP={}, subnet mask={}", baseAddress, subnetMask);
 		} catch (IllegalArgumentException e) {
