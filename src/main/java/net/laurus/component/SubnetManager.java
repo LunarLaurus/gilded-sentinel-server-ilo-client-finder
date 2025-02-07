@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.laurus.network.IPv4Address;
 import net.laurus.network.Subnet;
 import net.laurus.network.SubnetMask;
-import net.laurus.spring.config.SystemProperties;
+import net.laurus.spring.properties.SystemProperties;
 
 /**
  * Manages subnet-related operations for iLO devices.

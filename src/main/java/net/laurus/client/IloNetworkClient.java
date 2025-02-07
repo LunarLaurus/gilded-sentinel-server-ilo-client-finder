@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.laurus.component.NetworkCache;
 import net.laurus.component.RegistrationCache;
 import net.laurus.network.IPv4Address;
-import net.laurus.spring.config.SystemProperties;
+import net.laurus.spring.properties.SystemProperties;
 
 /**
  * Handles network interactions for iLO client validation.

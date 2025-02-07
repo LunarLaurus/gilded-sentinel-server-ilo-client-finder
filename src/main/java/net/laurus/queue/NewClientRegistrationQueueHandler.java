@@ -18,9 +18,9 @@ import net.laurus.ilo.AuthenticatedIloClient;
 import net.laurus.ilo.UnauthenticatedEndpoint;
 import net.laurus.ilo.UnauthenticatedIloClient;
 import net.laurus.network.IPv4Address;
-import net.laurus.service.AuthService;
 import net.laurus.service.ClientHeartbeatService;
 import net.laurus.service.ClientUpdateService;
+import net.laurus.spring.service.IloAuthService;
 import net.laurus.util.NetworkUtil;
 
 @Service
@@ -32,7 +32,7 @@ public class NewClientRegistrationQueueHandler {
 	private final RegistrationCache registrationHandler;
 	private final ClientHeartbeatService heartbeat;
 	private final ClientUpdateService iloClientService;
-	private final AuthService iloAuthService;
+	private final IloAuthService iloAuthService;
 	private final RabbitTemplate rabbitQueue;
 
 	/**

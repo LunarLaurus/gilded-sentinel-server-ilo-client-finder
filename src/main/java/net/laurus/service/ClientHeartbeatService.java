@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.laurus.component.NetworkCache;
 import net.laurus.network.IPv4Address;
+import net.laurus.spring.service.IloAuthService;
 
 /**
  * Monitors the heartbeat of registered clients and ensures their
@@ -41,7 +42,7 @@ public class ClientHeartbeatService {
 
 	private Cache<IPv4Address, Long> clientCache;
 
-	private final AuthService authService;
+	private final IloAuthService authService;
 	private final NetworkCache networkCache;
 
 	@Value("${client.responsiveness.threshold.ms:300000}") // Default: 5 minutes in milliseconds
@@ -125,7 +126,7 @@ public class ClientHeartbeatService {
 	@Scheduled(fixedRate = HEARTBEAT_INTERVAL_MS, initialDelay = INITIAL_DELAY_MS)
 	public void monitorRegisteredClients() {
 		List<IPv4Address> cachedAddresses = IPv4Address.fromBitmap(
-				authService.getSystemConfig().getIlo().getNetwork().getBaseAddress(),
+				authService.getSystemProperties().getIlo().getNetwork().getBaseAddress(),
 				networkCache.getActiveClients().getActiveIndexes());
 
 		if (cachedAddresses.isEmpty()) {
