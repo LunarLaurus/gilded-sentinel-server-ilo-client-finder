@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.laurus</groupId>
     <artifactId>gilded-service-impi-ilo</artifactId>
-    <version>0.0.49</version>
+    <version>0.0.50</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
