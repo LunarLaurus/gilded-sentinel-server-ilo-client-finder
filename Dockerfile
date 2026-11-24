@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21.0.13.1_2-jdk
+FROM eclipse-temurin:25.0.4.1_1-jdk
 
 WORKDIR /gilded-sentinel-service-ilo-finder
 
